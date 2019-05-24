@@ -7,7 +7,7 @@ static pthread_once_t sched_key_once = PTHREAD_ONCE_INIT;
 int _switch(nty_cpu_ctx *new_ctx, nty_cpu_ctx *cur_ctx);
 
 #ifdef __i386__
-__asm__ (
+__asm__ (	// 汇编实现的协程上下文切换
 "    .text                                  \n"
 "    .p2align 2,,3                          \n"
 ".globl _switch                             \n"
@@ -33,7 +33,7 @@ __asm__ (
 );
 #elif defined(__x86_64__)
 
-__asm__ (
+__asm__ (	// 汇编实现的上下文切换
 "    .text                                  \n"
 "       .p2align 4,,15                                   \n"
 ".globl _switch                                          \n"
@@ -75,7 +75,7 @@ static void _exec(void *lt) {
 	nty_coroutine_yield(co);
 #else
 	co->ops = 0;
-	_switch(&co->sched->ctx, &co->ctx);
+	_switch(&co->sched->ctx, &co->ctx);	//上下文切换，汇编实现的宏
 #endif
 }
 
@@ -95,7 +95,7 @@ static void nty_coroutine_init(nty_coroutine *co) {
 
 	stack[-3] = NULL;
 	stack[-2] = (void *)co;
-
+	// 关于寄存器的操作
 	co->ctx.esp = (void*)stack - (4 * sizeof(void*));
 	co->ctx.ebp = (void*)stack - (3 * sizeof(void*));
 	co->ctx.eip = (void*)_exec;
@@ -105,7 +105,7 @@ static void nty_coroutine_init(nty_coroutine *co) {
 
 void nty_coroutine_yield(nty_coroutine *co) {
 	co->ops = 0;
-	_switch(&co->sched->ctx, &co->ctx);
+	_switch(&co->sched->ctx, &co->ctx);	// 上下文切换，汇编实现的宏
 }
 
 static inline void nty_coroutine_madvise(nty_coroutine *co) {
