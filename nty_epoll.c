@@ -4,7 +4,7 @@
 
 
 int nty_epoller_create(void) {
-	return epoll_create(1024);
+	return epoll_create1(EPOLL_CLOEXEC); //内核实际版本的epoll_create1
 } 
 
 int nty_epoller_wait(struct timespec t) {
@@ -16,7 +16,7 @@ int nty_epoller_ev_register_trigger(void) {
 	nty_schedule *sched = nty_coroutine_get_sched();
 
 	if (!sched->eventfd) {
-		sched->eventfd = eventfd(0, EFD_NONBLOCK);
+		sched->eventfd = eventfd(0, EFD_NONBLOCK); //eventfd 线程间的异步通信
 		assert(sched->eventfd != -1);
 	}
 
